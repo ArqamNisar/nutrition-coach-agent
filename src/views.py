@@ -159,7 +159,7 @@ def render_dashboard(profile: UserProfile):
                 with col_item:
                     st.markdown(
                         f"""
-                        <div class="dark-theme-alert" style="margin: 0; padding: 10px 15px;">
+                        <div class="food-log-item" style="margin: 0; padding: 10px 15px;">
                             <strong>{food.food_name}</strong> - {food.calories:.0f} kcal<br/>
                             <span class="badge badge-protein">P: {food.protein:.1f}g</span>
                             <span class="badge badge-carbs">C: {food.carbs:.1f}g</span>

@@ -7,49 +7,75 @@ html, body, [class*="css"], .stText, .stMarkdown {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
 
-/* Glassmorphism card container */
+/* Base page customizations for a vibrant, light feel */
+.stApp {
+    background-color: #f0fbf6 !important;
+}
+
+/* Translucent premium card with animations */
 .premium-card {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.75) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 20px;
     padding: 24px;
     margin-bottom: 20px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.04);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark-theme-alert {
-    background: rgba(30, 41, 59, 0.7);
-    border-left: 4px solid #10b981;
-    border-radius: 8px;
-    padding: 16px;
-    margin: 10px 0;
+.premium-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
 }
 
-/* Gradient Header */
+/* Refreshing Food Log Items */
+.food-log-item, .dark-theme-alert {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-left: 5px solid #10b981 !important;
+    border-top: 1px solid rgba(16, 185, 129, 0.08) !important;
+    border-right: 1px solid rgba(16, 185, 129, 0.08) !important;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.08) !important;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.015);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.food-log-item:hover, .dark-theme-alert:hover {
+    transform: scale(1.02) translateX(4px);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.08);
+    border-left-color: #06b6d4 !important;
+}
+
+/* Gradient Header text */
 .gradient-text {
-    background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 2.25rem;
+    letter-spacing: -0.02em;
 }
 
-/* Subtitle */
+/* Subtitle text */
 .sub-text {
-    color: #94a3b8;
+    color: #475569;
     font-size: 1.05rem;
     margin-top: -10px;
     margin-bottom: 25px;
 }
 
-/* Progress bar container customization */
+/* Custom styled macro progress bars */
 .macro-progress-container {
-    background: rgba(148, 163, 184, 0.15);
+    background: rgba(148, 163, 184, 0.12);
     border-radius: 9999px;
     height: 10px;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 5px;
     margin-bottom: 12px;
     overflow: hidden;
 }
@@ -57,56 +83,166 @@ html, body, [class*="css"], .stText, .stMarkdown {
 .macro-progress-bar {
     height: 100%;
     border-radius: 9999px;
-    transition: width 0.5s ease-in-out;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Custom badges */
+/* Badges */
 .badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 4px 12px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     border-radius: 9999px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    margin-right: 6px;
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: translateY(-1px);
 }
 
 .badge-protein {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background-color: rgba(239, 68, 68, 0.08) !important;
+    color: #dc2626 !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
 }
 
 .badge-carbs {
-    background-color: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background-color: rgba(245, 158, 11, 0.08) !important;
+    color: #d97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.2) !important;
 }
 
 .badge-fat {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #10b981;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background-color: rgba(16, 185, 129, 0.08) !important;
+    color: #059669 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
 }
 
-/* Button micro-interactions */
-div.stButton > button {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 10px 24px !important;
+/* Animated Tabs customization */
+div[data-baseweb="tab-list"] {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+    padding: 6px !important;
+    border-radius: 14px !important;
+    gap: 8px !important;
+    border-bottom: none !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.01) !important;
+    margin-bottom: 20px !important;
+}
+
+div[data-baseweb="tab-list"] button {
+    font-size: 1rem !important;
     font-weight: 600 !important;
-    transition: all 0.3s ease !important;
+    color: #475569 !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 10px 24px !important;
+    border-radius: 10px !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+div[data-baseweb="tab-list"] button:hover {
+    color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.06) !important;
+    transform: translateY(-1px);
+}
+
+div[data-baseweb="tab-list"] button[aria-selected="true"] {
+    color: white !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
 }
 
+/* Primary buttons style & micro-interactions */
+div.stButton > button {
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 12px 28px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15) !important;
+}
+
 div.stButton > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
-    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3) !important;
+    background: linear-gradient(135deg, #059669 0%, #0891b2 100%) !important;
 }
 
 div.stButton > button:active {
-    transform: translateY(0px) !important;
+    transform: translateY(-1px) scale(0.99) !important;
 }
+
+/* Chat bubble styling */
+.chat-assistant-container {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.07) 0%, rgba(16, 185, 129, 0.03) 100%) !important;
+    border-left: 4px solid #06b6d4 !important;
+    border-top: 1px solid rgba(6, 182, 212, 0.05) !important;
+    border-right: 1px solid rgba(6, 182, 212, 0.05) !important;
+    border-bottom: 1px solid rgba(6, 182, 212, 0.05) !important;
+    padding: 16px 20px;
+    border-radius: 4px 20px 20px 20px;
+    margin: 12px 0;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.015);
+    transition: all 0.3s ease;
+    color: #1e293b !important;
+}
+
+.chat-assistant-container:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.05);
+}
+
+.chat-user-container {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-left: 4px solid #64748b !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.02) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.02) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.02) !important;
+    padding: 16px 20px;
+    border-radius: 4px 20px 20px 20px;
+    margin: 12px 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s ease;
+    color: #1e293b !important;
+}
+
+.chat-user-container:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.025);
+}
+
+/* Metric text formatting and background card style */
+div[data-testid="stMetricValue"] {
+    font-size: 2.2rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Scrollbar customizations */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(16, 185, 129, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.15);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.3);
+}
+
