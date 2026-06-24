@@ -1,0 +1,112 @@
+/* Premium Custom CSS for Nutrition Coach App */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+/* Apply font family */
+html, body, [class*="css"], .stText, .stMarkdown {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* Glassmorphism card container */
+.premium-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme-alert {
+    background: rgba(30, 41, 59, 0.7);
+    border-left: 4px solid #10b981;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+}
+
+/* Gradient Header */
+.gradient-text {
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+/* Subtitle */
+.sub-text {
+    color: #94a3b8;
+    font-size: 1.05rem;
+    margin-top: -10px;
+    margin-bottom: 25px;
+}
+
+/* Progress bar container customization */
+.macro-progress-container {
+    background: rgba(148, 163, 184, 0.15);
+    border-radius: 9999px;
+    height: 10px;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.macro-progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Custom badges */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-protein {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-carbs {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-fat {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Button micro-interactions */
+div.stButton > button {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+div.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+}
+
+div.stButton > button:active {
+    transform: translateY(0px) !important;
+}
