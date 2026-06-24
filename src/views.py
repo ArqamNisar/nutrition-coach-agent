@@ -5,6 +5,9 @@ from src.database import save_user_profile, get_user_profile, log_food, get_toda
 from src.agents.planner import PlannerAgent
 from src.agents.supervisor import SupervisorAgent
 from src.nutrition_api import search_food
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 # Initialize Agents
 planner_agent = PlannerAgent()
@@ -15,8 +18,9 @@ def load_css():
     try:
         with open("src/style.css", "r") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+            logger.info("Successfully loaded custom CSS stylesheet.")
     except Exception as e:
-        print(f"Error loading CSS: {e}")
+        logger.error(f"Error loading CSS: {e}", exc_info=True)
 
 def render_progress_bar(label: str, current: float, target: float, color: str, unit: str = "g"):
     """Renders a custom styled macro progress bar."""
@@ -69,6 +73,7 @@ def render_onboarding():
         submit = st.form_submit_button("Generate My Personalized Plan")
         
         if submit:
+            logger.info(f"UI Onboarding form submitted. Age: {age}, Gender: {gender}, Height: {height}cm, Weight: {weight}kg, Activity: {activity}, Diet: {diet_type}, Goal: {goal}")
             # Create profile object
             profile = UserProfile(
                 id=1,
@@ -84,6 +89,7 @@ def render_onboarding():
             
             # Calculate plan
             with st.spinner("Calculating nutritional targets with the Planner Agent..."):
+                logger.info("Recalculating plan targets programmatically through PlannerAgent.")
                 baselines = planner_agent.calculate_baselines(profile)
                 profile.target_calories = baselines["target_calories"]
                 profile.target_protein = baselines["protein_g"]
@@ -91,12 +97,14 @@ def render_onboarding():
                 profile.target_fat = baselines["fat_g"]
                 
                 # Save to database
+                logger.info("Saving newly onboarding user profile to database.")
                 save_user_profile(profile)
                 
                 # Get Explanation from Groq LLM
                 explanation = planner_agent.generate_plan_explanation(profile, baselines)
                 
                 # Create intro chat messages
+                logger.info("Initializing chat history with generated plan explanation.")
                 save_chat_message(ChatMessage(role="assistant", content=f"Hello! I am your AI Nutrition Coach. Based on your inputs, we have generated your personalized meal and macro plan:\n\n{explanation}"))
                 
             st.success("Plan Generated Successfully!")
@@ -104,6 +112,7 @@ def render_onboarding():
 
 def render_dashboard(profile: UserProfile):
     """Renders the dashboard with daily logs and target rings."""
+    logger.info("Rendering daily nutrition dashboard.")
     st.markdown("<h2 class='gradient-text'>📊 Daily Nutrition Dashboard</h2>", unsafe_allow_html=True)
     
     # Fetch today's food logs
@@ -164,6 +173,7 @@ def render_dashboard(profile: UserProfile):
                     # Vertical alignment trick for Streamlit button
                     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                     if st.button("🗑️", key=f"del_{food.id}", help="Delete log"):
+                        logger.info(f"UI deletion action triggered for food log ID: {food.id} ('{food.food_name}')")
                         delete_food_log(food.id)
                         st.success("Deleted!")
                         st.rerun()
@@ -173,6 +183,7 @@ def render_dashboard(profile: UserProfile):
         search_query = st.text_input("Search Food Database", placeholder="e.g. Greek yogurt, Chicken breast")
         
         if search_query:
+            logger.info(f"UI food search triggered for: '{search_query}'")
             with st.spinner("Searching public nutrition databases..."):
                 results = search_food(search_query)
                 
@@ -189,6 +200,7 @@ def render_dashboard(profile: UserProfile):
                         # Input quantity
                         qty = st.number_input(f"Quantity ({item['serving_unit']})", min_value=0.1, value=float(item['serving_quantity']), key=f"qty_{idx}")
                         if st.button("Log Food Item", key=f"add_{idx}"):
+                            logger.info(f"UI Log Food button clicked for API search result: '{item['food_name']}', qty={qty} {item['serving_unit']}")
                             # Scale values
                             ratio = qty / item['serving_quantity']
                             new_log = FoodLog(
@@ -224,6 +236,7 @@ def render_dashboard(profile: UserProfile):
                     
                 m_submit = st.form_submit_button("Add Custom Food")
                 if m_submit:
+                    logger.info(f"UI Manual Log form submitted: name='{m_name}', calories={m_cal}, P/C/F={m_prot}/{m_carbs}/{m_fat}, qty={m_qty} {m_unit}")
                     new_log = FoodLog(
                         food_name=m_name,
                         calories=m_cal,
@@ -239,6 +252,7 @@ def render_dashboard(profile: UserProfile):
 
 def render_coach(profile: UserProfile):
     """Renders the AI Coach Chat tab."""
+    logger.info("Rendering AI Coach Chat tab.")
     st.markdown("<h2 class='gradient-text'>💬 AI Nutrition Coach</h2>", unsafe_allow_html=True)
     st.markdown("<p class='sub-text'>Ask questions, get recipes, or log foods simply by telling your Coach what you ate!</p>", unsafe_allow_html=True)
     
@@ -281,6 +295,7 @@ def render_coach(profile: UserProfile):
     col_chat_hdr, col_clear = st.columns([5, 1])
     with col_clear:
         if st.button("Clear Chat", help="Clear all chat history"):
+            logger.info("UI Clear Chat button clicked.")
             clear_chat_history()
             st.rerun()
             
@@ -288,6 +303,7 @@ def render_coach(profile: UserProfile):
     user_input = st.chat_input("Tell your coach what you ate (e.g., 'Log 100g peanut butter', 'Suggest a high-protein recipe')")
     
     if user_input:
+        logger.info(f"UI Chat input submitted: '{user_input}'")
         # Render user message instantly
         st.markdown(f"<div class='chat-user-container'>👤 <strong>You</strong><br/>{user_input}</div>", unsafe_allow_html=True)
         
@@ -297,15 +313,19 @@ def render_coach(profile: UserProfile):
         # Call Supervisor to orchestrate and reply
         with st.spinner("Coach is thinking..."):
             history_dicts = [{"role": msg.role, "content": msg.content} for msg in get_chat_history()[:-1]]
+            logger.info("Invoking SupervisorAgent router for chat processing.")
             response = supervisor_agent.route_and_process(user_input, profile, todays_logs, history_dicts)
             
             # Save coach message
+            logger.info("SupervisorAgent response received. Saving to chat history.")
             save_chat_message(ChatMessage(role="assistant", content=response))
             
+        logger.info("Chat input execution finished. Rerunning view.")
         st.rerun()
 
 def render_profile(profile: UserProfile):
     """Renders user profile edit tab."""
+    logger.info("Rendering User Profile & Settings tab.")
     st.markdown("<h2 class='gradient-text'>👤 User Profile & Settings</h2>", unsafe_allow_html=True)
     st.markdown("<p class='sub-text'>Review and update your physical metrics and goals below.</p>", unsafe_allow_html=True)
     
@@ -338,6 +358,7 @@ def render_profile(profile: UserProfile):
         update = st.form_submit_button("Update Profile & Recalculate Plan")
         
         if update:
+            logger.info(f"UI Profile update form submitted. New values: Age={age}, Gender={gender}, Height={height}cm, Weight={weight}kg, Activity={activity}, Diet={diet_type}, Goal={goal}")
             profile.age = age
             profile.gender = gender
             profile.height = height
@@ -348,17 +369,21 @@ def render_profile(profile: UserProfile):
             profile.goal = goal
             
             with st.spinner("Recalculating plan..."):
+                logger.info("Recalculating targets during profile update.")
                 baselines = planner_agent.calculate_baselines(profile)
                 profile.target_calories = baselines["target_calories"]
                 profile.target_protein = baselines["protein_g"]
                 profile.target_carbs = baselines["carbs_g"]
                 profile.target_fat = baselines["fat_g"]
                 
+                logger.info("Saving updated user profile to database.")
                 save_user_profile(profile)
                 
                 # Save log message to chat
+                logger.info("Generating new plan explanation LLM response for chat update.")
                 explanation = planner_agent.generate_plan_explanation(profile, baselines)
                 save_chat_message(ChatMessage(role="assistant", content=f"🔄 I have updated your profile and recalculated your nutritional plan:\n\n{explanation}"))
                 
             st.success("Profile Updated and targets recalculated!")
             st.rerun()
+

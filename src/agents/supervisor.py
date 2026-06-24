@@ -6,7 +6,10 @@ from src.nutrition_api import search_food
 from src.database import log_food, save_user_profile, save_chat_message
 from src.agents.planner import PlannerAgent
 from src.agents.nutritionist import NutritionistAgent
+from src.logger import get_logger
 from typing import List, Dict, Any
+
+logger = get_logger(__name__)
 
 class SupervisorAgent:
     def __init__(self):
@@ -14,13 +17,16 @@ class SupervisorAgent:
         self.model = "llama-3.3-70b-versatile"
         self.planner = PlannerAgent()
         self.nutritionist = NutritionistAgent()
+        logger.info("SupervisorAgent initialized.")
 
     def route_and_process(self, user_message: str, profile: UserProfile, todays_logs: List[FoodLog], chat_history: List[dict]) -> str:
         """
         Routes the user query, executes actions (such as logging food or recalculating goals),
         and returns the final assistant response.
         """
+        logger.info(f"Supervisor routing request. User message length: {len(user_message)} characters.")
         if not self.client:
+            logger.warning("Groq client not initialized (missing API key). Routing aborted.")
             return "Groq API key not set. Please add it to your .env file."
 
         system_prompt = (
@@ -54,6 +60,7 @@ class SupervisorAgent:
         )
 
         try:
+            logger.info(f"Calling Groq chat completions using model '{self.model}' for intent classification.")
             chat_completion = self.client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -64,8 +71,12 @@ class SupervisorAgent:
                 response_format={"type": "json_object"}
             )
             
-            analysis = json.loads(chat_completion.choices[0].message.content)
+            raw_response = chat_completion.choices[0].message.content
+            logger.info("Received intent classification response from LLM.")
+            analysis = json.loads(raw_response)
             intent = analysis.get("intent", "chat")
+            reason = analysis.get("routing_reason", "No reason provided")
+            logger.info(f"Classified intent: '{intent}' (Reason: {reason})")
             
             if intent == "log_food":
                 return self._handle_log_food(analysis, todays_logs)
@@ -75,11 +86,12 @@ class SupervisorAgent:
                 
             else:
                 # Delegate to Nutritionist for coaching / answering questions
+                logger.info("Delegating call to NutritionistAgent.")
                 return self.nutritionist.respond(profile, todays_logs, chat_history, user_message)
 
         except Exception as e:
             # Fallback to general nutritionist if routing errors out
-            print(f"Routing error: {e}")
+            logger.error(f"Routing error: {e}. Falling back to NutritionistAgent.", exc_info=True)
             return self.nutritionist.respond(profile, todays_logs, chat_history, user_message)
 
     def _handle_log_food(self, analysis: Dict[str, Any], todays_logs: List[FoodLog]) -> str:
@@ -92,14 +104,19 @@ class SupervisorAgent:
         qty = food_details.get("quantity") or 1.0
         unit = food_details.get("unit") or "serving"
         
+        logger.info(f"Handling 'log_food' intent: food_name='{food_name}', quantity={qty}, unit='{unit}'")
+        
         if not food_name:
+            logger.warning("Intent was 'log_food' but food_name is missing from LLM details.")
             return "I couldn't quite catch the name of the food you ate. Could you please specify what food and quantity you'd like to log?"
 
         # 1. Try public database API
+        logger.info(f"Querying food APIs for database match on '{food_name}'.")
         db_results = search_food(food_name)
         
         if db_results:
             match = db_results[0]
+            logger.info(f"Found API match for '{food_name}': '{match.get('food_name')}' from {match.get('source')}.")
             # Adjust nutrition values based on logged quantity vs API base quantity
             base_qty = match.get("serving_quantity") or 100.0
             ratio = float(qty) / float(base_qty) if base_qty > 0 else 1.0
@@ -127,6 +144,7 @@ class SupervisorAgent:
                 serving_unit=unit
             )
             log_food(new_log)
+            logger.info(f"Logged food from database match: {new_log.food_name}, ID: {new_log.id}")
             
             return (
                 f"✅ **Logged from Database:**\n"
@@ -139,6 +157,7 @@ class SupervisorAgent:
             )
             
         # 2. Fall back to LLM Estimate if API returns nothing
+        logger.info(f"No database match for '{food_name}'. Checking fallback LLM estimates.")
         est = analysis.get("estimate")
         if est and est.get("calories") is not None:
             # Scale LLM estimate based on user quantity
@@ -155,6 +174,7 @@ class SupervisorAgent:
                 serving_unit=unit
             )
             log_food(new_log)
+            logger.info(f"Logged food from LLM estimate fallback: {new_log.food_name}, ID: {new_log.id}")
             
             return (
                 f"🍳 **Logged via Agent Estimation:**\n"
@@ -166,12 +186,14 @@ class SupervisorAgent:
                 f"- fat: `{new_log.fat}g`"
             )
             
+        logger.warning(f"Unable to retrieve nutrition estimate for '{food_name}'. Logging failed.")
         return f"Sorry, I couldn't log the food '{food_name}' because I was unable to retrieve a nutrition estimate. Please specify the grams or try again."
 
     def _handle_replan(self, profile: UserProfile) -> str:
         """
         Invokes the Planner agent to recalculate targets and saves them to the profile.
         """
+        logger.info(f"Handling 'replan' intent for user_id={profile.id}.")
         baselines = self.planner.calculate_baselines(profile)
         
         # Save new macros
@@ -181,8 +203,10 @@ class SupervisorAgent:
         profile.target_fat = baselines["fat_g"]
         
         save_user_profile(profile)
+        logger.info(f"Saved recalculated baselines to database: {baselines}")
         
         explanation = self.planner.generate_plan_explanation(profile, baselines)
+        logger.info("Generated new plan explanation from PlannerAgent.")
         
         return (
             f"🔄 **Plan Recalculated!**\n\n"
@@ -193,3 +217,4 @@ class SupervisorAgent:
             f"- **Fat**: `{profile.target_fat}g`\n\n"
             f"{explanation}"
         )
+

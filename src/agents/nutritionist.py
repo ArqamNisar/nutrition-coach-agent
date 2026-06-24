@@ -1,18 +1,24 @@
 from groq import Groq
 from src.config import GROQ_API_KEY
 from src.models import UserProfile, FoodLog
+from src.logger import get_logger
 from typing import List
+
+logger = get_logger(__name__)
 
 class NutritionistAgent:
     def __init__(self):
         self.client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
         self.model = "llama-3.3-70b-versatile"
+        logger.info("NutritionistAgent initialized.")
 
     def respond(self, profile: UserProfile, todays_logs: List[FoodLog], chat_history: List[dict], user_message: str) -> str:
         """
         Formulates a coaching response regarding user nutrition queries, recipes, and food logging.
         """
+        logger.info(f"Nutritionist respond triggered. Todays logs: {len(todays_logs)} items. Chat history size: {len(chat_history)} messages.")
         if not self.client:
+            logger.warning("Groq client not initialized (missing API key). Nutritionist respond aborted.")
             return "Groq API key not set. Please add it to your .env file to talk to the Nutritionist Coach."
 
         # Compile summaries of today's nutrients
@@ -76,12 +82,16 @@ class NutritionistAgent:
         messages.append({"role": "user", "content": user_message})
 
         try:
+            logger.info("Calling Groq LLM for Nutritionist response.")
             chat_completion = self.client.chat.completions.create(
                 messages=messages,
                 model=self.model,
                 temperature=0.7,
                 max_tokens=1000
             )
+            logger.info("Nutritionist response generated successfully.")
             return chat_completion.choices[0].message.content
         except Exception as e:
+            logger.error(f"Error talking to Nutritionist Agent: {e}", exc_info=True)
             return f"Error talking to Nutritionist Agent: {e}"
+

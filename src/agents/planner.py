@@ -2,18 +2,23 @@ import json
 from groq import Groq
 from src.config import GROQ_API_KEY
 from src.models import UserProfile
+from src.logger import get_logger
+
+logger = get_logger(__name__)
 
 class PlannerAgent:
     def __init__(self):
         self.client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
         # Default model
         self.model = "llama-3.3-70b-versatile"
+        logger.info("PlannerAgent initialized.")
 
     def calculate_baselines(self, profile: UserProfile) -> dict:
         """
         Calculates programmatic baseline caloric and macronutrient requirements.
         Uses Mifflin-St Jeor Equation.
         """
+        logger.info(f"Calculating baseline requirements for user_id={profile.id} (Weight: {profile.weight}kg, Goal: {profile.goal}, Diet: {profile.diet_type})")
         # BMR calculation
         if profile.gender.lower() == "male":
             bmr = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5
@@ -69,7 +74,7 @@ class PlannerAgent:
             fat_calories = target_calories - (protein_g * 4 + carbs_g * 4)
             fat_g = fat_calories / 9
 
-        return {
+        results = {
             "bmr": round(bmr),
             "tdee": round(tdee),
             "target_calories": round(target_calories),
@@ -77,6 +82,8 @@ class PlannerAgent:
             "carbs_g": round(carbs_g),
             "fat_g": round(fat_g)
         }
+        logger.info(f"Programmatic baselines calculated: {results}")
+        return results
 
     def generate_plan_explanation(self, profile: UserProfile, baselines: dict) -> str:
         """
@@ -84,6 +91,7 @@ class PlannerAgent:
         tailored to their goal, diet type, allergies, and activity level.
         """
         if not self.client:
+            logger.warning("Groq client not initialized. Using raw baseline calculations placeholder.")
             return "Groq API key not set. Using raw baseline calculations. Adjust your .env to see a personalized plan write-up."
 
         system_prompt = (
@@ -120,6 +128,7 @@ class PlannerAgent:
         """
 
         try:
+            logger.info("Calling Groq LLM for plan explanation generation.")
             chat_completion = self.client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -129,6 +138,9 @@ class PlannerAgent:
                 temperature=0.2,
                 max_tokens=1000
             )
+            logger.info("Plan explanation successfully generated.")
             return chat_completion.choices[0].message.content
         except Exception as e:
+            logger.error(f"Error generating plan explanation via Groq: {e}", exc_info=True)
             return f"Error generating plan explanation via Groq: {e}\n\nBaselines calculated successfully:\n- Calories: {baselines['target_calories']} kcal\n- Protein: {baselines['protein_g']}g\n- Carbs: {baselines['carbs_g']}g\n- Fat: {baselines['fat_g']}g"
+
