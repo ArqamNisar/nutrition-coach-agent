@@ -471,11 +471,8 @@ def render_meal_planner(profile: UserProfile):
         with st.container(border=True):
             sections = parse_meal_plan_sections(current_plan.plan_text)
             
-            # Display overview / intro at the top
+            # Discard general overview / intro text as requested
             if sections and sections[0][0] == "Overview":
-                intro_title, intro_text = sections[0]
-                if intro_text:
-                    st.markdown(intro_text)
                 sections = sections[1:]
                 
             # Display each day or week section in an expander
