@@ -389,6 +389,46 @@ def render_profile(profile: UserProfile):
             st.success("Profile Updated and targets recalculated!")
             st.rerun()
 
+def parse_meal_plan_sections(plan_text: str) -> list:
+    """
+    Parses meal plan markdown text into sections.
+    Each section is a tuple of (title, content).
+    Any leading text before the first heading is returned as an intro block.
+    """
+    import re
+    lines = plan_text.split("\n")
+    sections = []
+    current_title = "Overview"
+    current_content = []
+    
+    # Common keywords to match day or week headings
+    keywords = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "week 1", "week 2", "week 3", "week 4"]
+    
+    for line in lines:
+        match = re.match(r"^#+\s*(.*)$", line)
+        if match:
+            heading = match.group(1).strip()
+            # Check if this heading represents a new day or week section
+            is_section_header = False
+            for kw in keywords:
+                if kw in heading.lower():
+                    is_section_header = True
+                    break
+            
+            if is_section_header:
+                # Save previous section if it has content
+                sections.append((current_title, "\n".join(current_content).strip()))
+                current_title = heading
+                current_content = []
+            else:
+                current_content.append(line)
+        else:
+            current_content.append(line)
+            
+    # Add final section
+    sections.append((current_title, "\n".join(current_content).strip()))
+    return sections
+
 def render_meal_planner(profile: UserProfile):
     """Renders the dedicated Meal Planner interface."""
     logger.info("Rendering Meal Planner tab.")
@@ -427,9 +467,22 @@ def render_meal_planner(profile: UserProfile):
         st.markdown(f"### Current {plan_type} Meal Plan")
         st.caption(f"Generated at: {current_plan.generated_at.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Display plan in a container
+        # Display plan in collapsible expanders inside a container
         with st.container(border=True):
-            st.markdown(current_plan.plan_text)
+            sections = parse_meal_plan_sections(current_plan.plan_text)
+            
+            # Display overview / intro at the top
+            if sections and sections[0][0] == "Overview":
+                intro_title, intro_text = sections[0]
+                if intro_text:
+                    st.markdown(intro_text)
+                sections = sections[1:]
+                
+            # Display each day or week section in an expander
+            for title, content in sections:
+                if content:
+                    with st.expander(title):
+                        st.markdown(content)
     else:
         st.info("No meal plan generated yet. Select a duration above and click 'Generate My Meal Plan' to create one!")
 
