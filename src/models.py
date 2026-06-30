@@ -38,3 +38,10 @@ class ChatMessage(SQLModel, table=True):
     role: str  # "user" or "assistant"
     agent_name: Optional[str] = None  # "supervisor", "planner", or "nutritionist"
     content: str
+
+class MealPlan(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+    id: Optional[int] = Field(default=1, primary_key=True)
+    duration: str  # "week" or "month"
+    plan_text: str
+    generated_at: datetime = Field(default_factory=datetime.now)

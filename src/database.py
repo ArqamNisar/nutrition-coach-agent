@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, create_engine, Session, select
 from typing import Optional, List
 from datetime import datetime
 from src.config import DATABASE_URL
-from src.models import UserProfile, FoodLog, ChatMessage
+from src.models import UserProfile, FoodLog, ChatMessage, MealPlan
 from src.logger import get_logger
 
 logger = get_logger(__name__)
@@ -121,4 +121,32 @@ def clear_chat_history():
         session.query(ChatMessage).delete()
         session.commit()
         logger.info("Chat history cleared successfully.")
+
+def get_current_meal_plan() -> Optional[MealPlan]:
+    """Retrieves the current meal plan from the database."""
+    logger.info("Retrieving current meal plan from database.")
+    with Session(engine) as session:
+        return session.get(MealPlan, 1)
+
+def save_meal_plan(plan_text: str, duration: str) -> MealPlan:
+    """Saves or updates the current meal plan."""
+    logger.info(f"Saving new meal plan with duration={duration}")
+    with Session(engine) as session:
+        db_plan = session.get(MealPlan, 1)
+        if db_plan:
+            db_plan.plan_text = plan_text
+            db_plan.duration = duration
+            db_plan.generated_at = datetime.now()
+            session.add(db_plan)
+            session.commit()
+            session.refresh(db_plan)
+            logger.info("Updated existing meal plan.")
+            return db_plan
+        else:
+            new_plan = MealPlan(id=1, duration=duration, plan_text=plan_text)
+            session.add(new_plan)
+            session.commit()
+            session.refresh(new_plan)
+            logger.info("Created new meal plan.")
+            return new_plan
 

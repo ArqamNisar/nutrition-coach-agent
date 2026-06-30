@@ -1,6 +1,6 @@
 import streamlit as st
 from src.database import init_db, get_user_profile, get_todays_food_logs
-from src.views import render_onboarding, render_dashboard, render_coach, render_profile, load_css
+from src.views import render_onboarding, render_dashboard, render_coach, render_profile, load_css, render_meal_planner
 
 # Set Page Config
 st.set_page_config(
@@ -61,14 +61,18 @@ else:
     st.sidebar.write(f"Calories: {c_cal:.0f} / {profile.target_calories or 0:.0f} kcal")
     
     # Main Navigation Tabs
-    tab_dash, tab_coach, tab_prof = st.tabs([
+    tab_dash, tab_plan, tab_coach, tab_prof = st.tabs([
         "📊 Dashboard", 
+        "📅 Meal Planner",
         "💬 AI Coach Chat", 
         "👤 My Profile"
     ])
     
     with tab_dash:
         render_dashboard(profile)
+        
+    with tab_plan:
+        render_meal_planner(profile)
         
     with tab_coach:
         render_coach(profile)

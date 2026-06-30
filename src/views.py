@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
-from src.models import UserProfile, FoodLog, ChatMessage
-from src.database import save_user_profile, get_user_profile, log_food, get_todays_food_logs, delete_food_log, save_chat_message, get_chat_history, clear_chat_history
+from src.models import UserProfile, FoodLog, ChatMessage, MealPlan
+from src.database import save_user_profile, get_user_profile, log_food, get_todays_food_logs, delete_food_log, save_chat_message, get_chat_history, clear_chat_history, get_current_meal_plan, save_meal_plan
 from src.agents.planner import PlannerAgent
 from src.agents.supervisor import SupervisorAgent
 from src.nutrition_api import search_food
@@ -388,4 +388,55 @@ def render_profile(profile: UserProfile):
                 
             st.success("Profile Updated and targets recalculated!")
             st.rerun()
+
+def render_meal_planner(profile: UserProfile):
+    """Renders the dedicated Meal Planner interface."""
+    logger.info("Rendering Meal Planner tab.")
+    st.markdown("<h2 class='gradient-text'>📅 AI Meal Planner</h2>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-text'>Generate and view structured weekly or monthly meal plans tailored to your fitness targets, diet type, and restrictions.</p>", unsafe_allow_html=True)
+    
+    # Check if a plan already exists in database
+    current_plan = get_current_meal_plan()
+    
+    # Selection panel inside a premium card layout
+    st.markdown("<div class='premium-card'>", unsafe_allow_html=True)
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        duration = st.selectbox(
+            "Select Meal Plan Duration",
+            ["7-Day Weekly Plan", "4-Week Monthly Plan"],
+            key="plan_duration_selection"
+        )
+    with col2:
+        st.write("") # spacing
+        st.write("")
+        # We parse the duration to "week" or "month"
+        dur_code = "week" if "7-Day" in duration else "month"
+        generate_btn = st.button("✨ Generate My Meal Plan", use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    if generate_btn:
+        with st.spinner(f"Generating your personalized {duration}..."):
+            plan_text = planner_agent.generate_meal_plan(profile, dur_code)
+            current_plan = save_meal_plan(plan_text, dur_code)
+            st.success("Meal plan successfully generated!")
+            st.rerun()
+            
+    if current_plan:
+        st.markdown("---")
+        plan_type = "Weekly" if current_plan.duration == "week" else "Monthly"
+        st.markdown(f"### Current {plan_type} Meal Plan")
+        st.caption(f"Generated at: {current_plan.generated_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Display plan in a container with scrolling or raw markdown
+        st.markdown(
+            f"""
+            <div class='premium-card' style='background: rgba(255, 255, 255, 0.9) !important; padding: 30px; border-left: 5px solid #06b6d4 !important;'>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(current_plan.plan_text)
+        st.markdown("</div>", unsafe_allow_html=True)
+    else:
+        st.info("No meal plan generated yet. Select a duration above and click 'Generate My Meal Plan' to create one!")
 

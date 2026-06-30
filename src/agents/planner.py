@@ -144,3 +144,65 @@ class PlannerAgent:
             logger.error(f"Error generating plan explanation via Groq: {e}", exc_info=True)
             return f"Error generating plan explanation via Groq: {e}\n\nBaselines calculated successfully:\n- Calories: {baselines['target_calories']} kcal\n- Protein: {baselines['protein_g']}g\n- Carbs: {baselines['carbs_g']}g\n- Fat: {baselines['fat_g']}g"
 
+    def generate_meal_plan(self, profile: UserProfile, duration: str) -> str:
+        """
+        Generates a comprehensive weekly or monthly meal plan tailored to the user's
+        physical metrics, dietary preferences, restrictions, and calculated targets.
+        """
+        if not self.client:
+            logger.warning("Groq client not initialized. Cannot generate meal plan.")
+            return "Groq API key not set. Please add `GROQ_API_KEY` to your `.env` file to generate a meal plan."
+
+        duration_label = "7-Day Weekly" if duration == "week" else "4-Week Monthly Rotation"
+        
+        system_prompt = (
+            "You are the **Planner Agent**, an expert dietitian and meal planner. "
+            "Your task is to generate a highly personalized, structured meal plan for the user "
+            "based on their goals, activity level, diet type, allergies, and daily calorie/macronutrient budgets. "
+            "Make sure to specify meal-by-meal breakdowns (Breakfast, Lunch, Dinner, Snack) with estimated quantities, "
+            "calories, and protein/carb/fat macros for each recommendation. Format your output beautifully using Markdown."
+        )
+
+        user_prompt = f"""
+        User Profile & Goals:
+        - Age: {profile.age}
+        - Gender: {profile.gender}
+        - Height: {profile.height} cm
+        - Weight: {profile.weight} kg
+        - Activity Level: {profile.activity_level}
+        - Diet Type: {profile.diet_type}
+        - Allergies / Restrictions: {profile.allergies}
+        - Goal: {profile.goal}
+        
+        Daily Target Budget:
+        - Calories: {profile.target_calories:.0f} kcal
+        - Protein: {profile.target_protein:.0f}g
+        - Carbs: {profile.target_carbs:.0f}g
+        - Fats: {profile.target_fat:.0f}g
+        
+        Please generate a **{duration_label} Meal Plan**.
+        Requirements:
+        1. All meals must respect the diet type ({profile.diet_type}) and absolutely exclude any ingredients related to their allergies/restrictions ({profile.allergies}).
+        2. Format clearly with Markdown headings and lists.
+        3. For a **Weekly** plan: Provide a day-by-day plan for 7 days (Monday to Sunday) with Breakfast, Lunch, Dinner, and 1 Snack. For each day, include a short summary of how the daily total aligns with the budget.
+        4. For a **Monthly** plan: Provide a 4-week structured rotation guide. Present it as Week 1 to Week 4, outlining distinct menus or theme structures for each week to keep it varied and realistic, with complete meal suggestions for representative days.
+        5. Keep your tone professional, motivating, and focus on simple, healthy ingredients.
+        """
+
+        try:
+            logger.info(f"Calling Groq LLM for {duration} meal plan generation.")
+            chat_completion = self.client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                model=self.model,
+                temperature=0.3,
+                max_tokens=2500
+            )
+            logger.info("Meal plan successfully generated.")
+            return chat_completion.choices[0].message.content
+        except Exception as e:
+            logger.error(f"Error generating meal plan via Groq: {e}", exc_info=True)
+            return f"Error generating meal plan via Groq: {e}"
+
