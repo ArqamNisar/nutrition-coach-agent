@@ -75,3 +75,5 @@ else:
         
     with tab_prof:
         render_profile(profile)
+
+# Force watcher reload

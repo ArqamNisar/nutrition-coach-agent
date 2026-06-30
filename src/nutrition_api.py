@@ -14,13 +14,17 @@ def search_open_food_facts(query: str) -> List[Dict[str, Any]]:
     url = "https://world.openfoodfacts.org/cgi/search.pl"
     params = {
         "search_terms": query,
-        "json": "true",
-        "page_size": 10,
-        "fields": "product_name,product_name_en,nutriments,serving_size,image_front_thumb_url,code"
+        "search_simple": "1",
+        "action": "process",
+        "json": "1",
+        "page_size": 10
+    }
+    headers = {
+        "User-Agent": "NutritionCoachAgent/1.0 (https://github.com/ArqamNisar/nutrition-coach-agent)"
     }
     
     try:
-        response = requests.get(url, params=params, timeout=8)
+        response = requests.get(url, params=params, headers=headers, timeout=8)
         logger.info(f"Open Food Facts API response status code: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
