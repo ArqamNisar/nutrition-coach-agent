@@ -398,22 +398,21 @@ def render_meal_planner(profile: UserProfile):
     # Check if a plan already exists in database
     current_plan = get_current_meal_plan()
     
-    # Selection panel inside a premium card layout
-    st.markdown("<div class='premium-card'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        duration = st.selectbox(
-            "Select Meal Plan Duration",
-            ["7-Day Weekly Plan", "4-Week Monthly Plan"],
-            key="plan_duration_selection"
-        )
-    with col2:
-        st.write("") # spacing
-        st.write("")
-        # We parse the duration to "week" or "month"
-        dur_code = "week" if "7-Day" in duration else "month"
-        generate_btn = st.button("✨ Generate My Meal Plan", use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Selection panel inside a native Streamlit container
+    with st.container(border=True):
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            duration = st.selectbox(
+                "Select Meal Plan Duration",
+                ["7-Day Weekly Plan", "4-Week Monthly Plan"],
+                key="plan_duration_selection"
+            )
+        with col2:
+            st.write("") # spacing
+            st.write("")
+            # We parse the duration to "week" or "month"
+            dur_code = "week" if "7-Day" in duration else "month"
+            generate_btn = st.button("✨ Generate My Meal Plan", use_container_width=True)
     
     if generate_btn:
         with st.spinner(f"Generating your personalized {duration}..."):
@@ -428,15 +427,9 @@ def render_meal_planner(profile: UserProfile):
         st.markdown(f"### Current {plan_type} Meal Plan")
         st.caption(f"Generated at: {current_plan.generated_at.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Display plan in a container with scrolling or raw markdown
-        st.markdown(
-            f"""
-            <div class='premium-card' style='background: rgba(255, 255, 255, 0.9) !important; padding: 30px; border-left: 5px solid #06b6d4 !important;'>
-            """,
-            unsafe_allow_html=True
-        )
-        st.markdown(current_plan.plan_text)
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Display plan in a container
+        with st.container(border=True):
+            st.markdown(current_plan.plan_text)
     else:
         st.info("No meal plan generated yet. Select a duration above and click 'Generate My Meal Plan' to create one!")
 
