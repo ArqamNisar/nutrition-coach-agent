@@ -153,7 +153,23 @@ class PlannerAgent:
             logger.warning("Groq client not initialized. Cannot generate meal plan.")
             return "Groq API key not set. Please add `GROQ_API_KEY` to your `.env` file to generate a meal plan."
 
-        duration_label = "7-Day Weekly" if duration == "week" else "4-Week Monthly Rotation"
+        if duration == "week":
+            duration_label = "7-Day Weekly"
+            duration_instructions = (
+                "Provide a day-by-day meal plan for exactly 7 days (Monday to Sunday) with Breakfast, Lunch, Dinner, and 1 Snack for each day. "
+                "Include estimated quantities and calories/protein/carb/fat macros for each meal. "
+                "For each day, include a short summary of how the daily total aligns with the target daily budget.\n"
+                "Do NOT include any monthly plan details, guides, or overviews. Focus solely on the 7-day weekly menu."
+            )
+        else:
+            duration_label = "4-Week Monthly Rotation"
+            duration_instructions = (
+                "Provide a 4-week structured monthly rotation guide. "
+                "Present it clearly as Week 1, Week 2, Week 3, and Week 4. "
+                "For each week, outline a distinct menu theme or structure to keep meals varied and realistic, "
+                "and provide complete meal suggestions (Breakfast, Lunch, Dinner, Snack) with macro estimates for representative days of that week.\n"
+                "Do NOT include a 7-day daily breakdown for the entire month day-by-day. Focus on the 4 weekly rotations and representative menus."
+            )
         
         system_prompt = (
             "You are the **Planner Agent**, an expert dietitian and meal planner. "
@@ -181,12 +197,13 @@ class PlannerAgent:
         - Fats: {profile.target_fat:.0f}g
         
         Please generate a **{duration_label} Meal Plan**.
-        Requirements:
+        
+        Specific Instructions:
         1. All meals must respect the diet type ({profile.diet_type}) and absolutely exclude any ingredients related to their allergies/restrictions ({profile.allergies}).
         2. Format clearly with Markdown headings and lists.
-        3. For a **Weekly** plan: Provide a day-by-day plan for 7 days (Monday to Sunday) with Breakfast, Lunch, Dinner, and 1 Snack. For each day, include a short summary of how the daily total aligns with the budget.
-        4. For a **Monthly** plan: Provide a 4-week structured rotation guide. Present it as Week 1 to Week 4, outlining distinct menus or theme structures for each week to keep it varied and realistic, with complete meal suggestions for representative days.
-        5. Keep your tone professional, motivating, and focus on simple, healthy ingredients.
+        3. {duration_instructions}
+        4. Keep your tone professional, motivating, and focus on simple, healthy ingredients.
+        5. Do NOT include any introductory or concluding overview/summary text at the top or bottom of your response. Start directly with the first day/week heading (e.g. '### Monday' or '### Week 1').
         """
 
         try:

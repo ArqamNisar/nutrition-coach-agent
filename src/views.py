@@ -475,11 +475,20 @@ def render_meal_planner(profile: UserProfile):
             if sections and sections[0][0] == "Overview":
                 sections = sections[1:]
                 
-            # Display each day or week section in an expander
+            # Display each day or week section in an expander, filtered by duration
             for title, content in sections:
                 if content:
-                    with st.expander(title):
-                        st.markdown(content)
+                    title_lower = title.lower()
+                    if current_plan.duration == "week":
+                        # Only show daily sections
+                        is_valid = any(day in title_lower for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"])
+                    else:
+                        # Only show weekly rotation sections
+                        is_valid = "week" in title_lower and "overview" not in title_lower
+                        
+                    if is_valid:
+                        with st.expander(title):
+                            st.markdown(content)
     else:
         st.info("No meal plan generated yet. Select a duration above and click 'Generate My Meal Plan' to create one!")
 
