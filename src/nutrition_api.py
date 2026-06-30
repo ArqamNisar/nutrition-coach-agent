@@ -91,22 +91,26 @@ def search_usda(query: str, api_key: str) -> List[Dict[str, Any]]:
                 fat = 0.0
                 
                 for nutr in nutrients:
-                    # Look up by nutrientName or nutrientId
+                    n_id = nutr.get("nutrientId")
                     n_name = nutr.get("nutrientName", "").lower()
                     n_value = nutr.get("value", 0.0)
+                    u_name = nutr.get("unitName", "").lower()
                     
-                    if "energy" in n_name and "kcal" in n_name:
+                    # Match energy/calories (ID 1008 is Energy in kcal)
+                    if n_id == 1008 or (n_name == "energy" and u_name == "kcal"):
                         kcal = n_value
-                    elif "protein" in n_name:
+                    # Match protein (ID 1003)
+                    elif n_id == 1003 or n_name == "protein":
                         protein = n_value
-                    elif "carbohydrate" in n_name:
+                    # Match carbohydrates (ID 1005)
+                    elif n_id == 1005 or "carbohydrate" in n_name:
                         carbs = n_value
-                    elif "fat" in n_name or "lipid" in n_name:
+                    # Match total fat (ID 1004), avoiding saturated/trans fats overwriting it
+                    elif n_id == 1004 or n_name == "total lipid (fat)":
                         fat = n_value
                 
-                serving_size = food.get("servingSize", 100.0)
-                serving_unit = food.get("servingSizeUnit", "g")
-                
+                # USDA nutrients are returned per 100g/100ml.
+                # Setting base serving quantity to 100.0g ensures correct scaling ratios in views.
                 results.append({
                     "source": "USDA FoodData Central",
                     "food_name": name,
@@ -114,8 +118,8 @@ def search_usda(query: str, api_key: str) -> List[Dict[str, Any]]:
                     "protein": float(protein),
                     "carbs": float(carbs),
                     "fat": float(fat),
-                    "serving_quantity": float(serving_size),
-                    "serving_unit": serving_unit,
+                    "serving_quantity": 100.0,
+                    "serving_unit": "g",
                     "image_url": "",
                     "barcode": ""
                 })

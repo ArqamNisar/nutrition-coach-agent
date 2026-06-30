@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 class UserProfile(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=1, primary_key=True)  # Single user model, default to ID 1
     age: int
     gender: str
@@ -19,6 +20,7 @@ class UserProfile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.now)
 
 class FoodLog(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=None, primary_key=True)
     timestamp: datetime = Field(default_factory=datetime.now)
     food_name: str
@@ -30,6 +32,7 @@ class FoodLog(SQLModel, table=True):
     serving_unit: str  # e.g., grams, oz, pieces
 
 class ChatMessage(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=None, primary_key=True)
     timestamp: datetime = Field(default_factory=datetime.now)
     role: str  # "user" or "assistant"
