@@ -285,11 +285,12 @@ def render_coach(profile: UserProfile):
     
     # Display message history
     for msg in history:
-        if msg.role == "user":
-            st.markdown(f"<div class='chat-user-container'>👤 <strong>You</strong><br/>{msg.content}</div>", unsafe_allow_html=True)
-        else:
-            agent_tag = f" ({msg.agent_name.capitalize()})" if msg.agent_name else ""
-            st.markdown(f"<div class='chat-assistant-container'>🤖 <strong>Coach{agent_tag}</strong><br/>{msg.content}</div>", unsafe_allow_html=True)
+        with st.chat_message(msg.role):
+            if msg.role == "user":
+                st.markdown(msg.content)
+            else:
+                agent_tag = f" ({msg.agent_name.capitalize()})" if msg.agent_name else ""
+                st.markdown(f"**Coach{agent_tag}**\n\n{msg.content}")
             
     # Quick clear button in the sidebar or above chat
     col_chat_hdr, col_clear = st.columns([5, 1])
@@ -305,7 +306,8 @@ def render_coach(profile: UserProfile):
     if user_input:
         logger.info(f"UI Chat input submitted: '{user_input}'")
         # Render user message instantly
-        st.markdown(f"<div class='chat-user-container'>👤 <strong>You</strong><br/>{user_input}</div>", unsafe_allow_html=True)
+        with st.chat_message("user"):
+            st.markdown(user_input)
         
         # Save user message
         save_chat_message(ChatMessage(role="user", content=user_input))
