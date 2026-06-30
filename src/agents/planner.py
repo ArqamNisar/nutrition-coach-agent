@@ -162,13 +162,13 @@ class PlannerAgent:
                 "Do NOT include any monthly plan details, guides, or overviews. Focus solely on the 7-day weekly menu."
             )
         else:
-            duration_label = "4-Week Monthly Rotation"
+            duration_label = "4-Week Monthly Plan"
             duration_instructions = (
-                "Provide a 4-week structured monthly rotation guide. "
+                "Provide a comprehensive 4-week monthly meal plan. "
                 "Present it clearly as Week 1, Week 2, Week 3, and Week 4. "
-                "For each week, outline a distinct menu theme or structure to keep meals varied and realistic, "
-                "and provide complete meal suggestions (Breakfast, Lunch, Dinner, Snack) with macro estimates for representative days of that week.\n"
-                "Do NOT include a 7-day daily breakdown for the entire month day-by-day. Focus on the 4 weekly rotations and representative menus."
+                "For each week, you MUST provide complete meal suggestions (Breakfast, Lunch, Dinner, Snack) with estimated quantities and macros "
+                "for all 7 days of that week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday). "
+                "Ensure every single day of the 4 weeks is listed and has complete meals specified. Do not skip any days."
             )
         
         system_prompt = (
@@ -215,7 +215,7 @@ class PlannerAgent:
                 ],
                 model=self.model,
                 temperature=0.3,
-                max_tokens=2500
+                max_tokens=6000
             )
             logger.info("Meal plan successfully generated.")
             return chat_completion.choices[0].message.content

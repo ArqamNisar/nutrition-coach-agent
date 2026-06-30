@@ -389,7 +389,7 @@ def render_profile(profile: UserProfile):
             st.success("Profile Updated and targets recalculated!")
             st.rerun()
 
-def parse_meal_plan_sections(plan_text: str) -> list:
+def parse_meal_plan_sections(plan_text: str, duration: str) -> list:
     """
     Parses meal plan markdown text into sections.
     Each section is a tuple of (title, content).
@@ -401,8 +401,11 @@ def parse_meal_plan_sections(plan_text: str) -> list:
     current_title = "Overview"
     current_content = []
     
-    # Common keywords to match day or week headings
-    keywords = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "week 1", "week 2", "week 3", "week 4"]
+    # Common keywords to match day or week headings based on duration
+    if duration == "week":
+        keywords = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    else:
+        keywords = ["week 1", "week 2", "week 3", "week 4", "week-1", "week-2", "week-3", "week-4"]
     
     for line in lines:
         match = re.match(r"^#+\s*(.*)$", line)
@@ -469,26 +472,17 @@ def render_meal_planner(profile: UserProfile):
         
         # Display plan in collapsible expanders inside a container
         with st.container(border=True):
-            sections = parse_meal_plan_sections(current_plan.plan_text)
+            sections = parse_meal_plan_sections(current_plan.plan_text, current_plan.duration)
             
             # Discard general overview / intro text as requested
             if sections and sections[0][0] == "Overview":
                 sections = sections[1:]
                 
-            # Display each day or week section in an expander, filtered by duration
+            # Display each parsed day or week section in an expander
             for title, content in sections:
                 if content:
-                    title_lower = title.lower()
-                    if current_plan.duration == "week":
-                        # Only show daily sections
-                        is_valid = any(day in title_lower for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"])
-                    else:
-                        # Only show weekly rotation sections
-                        is_valid = "week" in title_lower and "overview" not in title_lower
-                        
-                    if is_valid:
-                        with st.expander(title):
-                            st.markdown(content)
+                    with st.expander(title):
+                        st.markdown(content)
     else:
         st.info("No meal plan generated yet. Select a duration above and click 'Generate My Meal Plan' to create one!")
 
